@@ -37,14 +37,11 @@ pipeline:
                       npm install
                       npm test
               - step:
-                  type: BuildAndPushDockerRegistry
                   name: Build and push image to docker hub
                   identifier: Build_and_push_image_to_docker_hub
-                  spec:
-                    connectorRef: docker_quickstart
-                    repo: makr1993/harness_repo
-                    tags:
-                      - latest
+                  template:
+                    templateRef: docker_push
+                    versionLabel: v1
     - stage:
         name: deployment
         identifier: deployment
