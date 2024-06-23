@@ -37,16 +37,14 @@ pipeline:
                       npm install
                       npm test
               - step:
-                  name: Build and push image to docker hub
-                  identifier: Build_and_push_image_to_docker_hub
-                  template:
-                    templateRef: docker_push
-                    versionLabel: v1
-                    templateInputs:
-                      type: BuildAndPushDockerRegistry
-                      spec:
-                        connectorRef: <+input>
-                        repo: <+input>
+                  type: BuildAndPushDockerRegistry
+                  name: BuildAndPushDockerRegistry_1
+                  identifier: BuildAndPushDockerRegistry_1
+                  spec:
+                    connectorRef: docker_quickstart
+                    repo: marwakrouma/todo-app-example
+                    tags:
+                      - latest
     - stage:
         name: deployment
         identifier: deployment
