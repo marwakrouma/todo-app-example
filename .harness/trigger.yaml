@@ -1,0 +1,29 @@
+inputSet:
+  name: trigger inputset
+  identifier: trigger_inputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: todo_app
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>
+    stages:
+      - stage:
+          identifier: test_and_build
+          type: CI
+          spec:
+            execution:
+              steps:
+                - step:
+                    identifier: build_and_push_to_docker
+                    template:
+                      templateInputs:
+                        type: BuildAndPushDockerRegistry
+                        spec:
+                          connectorRef: docker_quickstart
+                          repo: makr1993/harness_repo
