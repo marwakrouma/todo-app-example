@@ -1,0 +1,26 @@
+inputSet:
+  name: docker repo name
+  identifier: docker_repo_name
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: todo_app
+    properties:
+      ci:
+        codebase:
+          build: <+input>
+    stages:
+      - stage:
+          identifier: test_and_build
+          type: CI
+          spec:
+            execution:
+              steps:
+                - step:
+                    identifier: build_and_push_to_docker
+                    template:
+                      templateInputs:
+                        type: BuildAndPushDockerRegistry
+                        spec:
+                          connectorRef: <+input>
+                          repo: makr1993/harness_repo
