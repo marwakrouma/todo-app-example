@@ -1,6 +1,6 @@
 # Todo list exercise
 
-## Prerequisites 
+## Prerequisites
 
 - [nodejs](https://nodejs.org/en/)
 > - [docker](https://docs.docker.com/)
@@ -45,3 +45,4 @@ The above with create an image with the `latest` tag. To run the container execu
 ```sh
 docker run -it -p 8080:8080 --name todo_list_app thoba/todo-list-app
 ```
+Just modified the file to trigger pipeline run.
