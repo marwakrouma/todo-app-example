@@ -42,6 +42,11 @@ pipeline:
                   template:
                     templateRef: docker_push
                     versionLabel: v1
+                    templateInputs:
+                      type: BuildAndPushDockerRegistry
+                      spec:
+                        connectorRef: <+input>
+                        repo: <+input>
     - stage:
         name: deployment
         identifier: deployment
