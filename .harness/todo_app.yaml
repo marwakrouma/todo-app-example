@@ -53,7 +53,7 @@ pipeline:
         spec:
           deploymentType: Kubernetes
           service:
-            serviceRef: todolist
+            serviceRef: kubes
           environment:
             environmentRef: prod
             deployToAll: false
