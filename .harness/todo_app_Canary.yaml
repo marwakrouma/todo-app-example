@@ -1,87 +1,117 @@
----
 pipeline:
-  projectIdentifier: "default_project"
-  orgIdentifier: "default"
+  projectIdentifier: default_project
+  orgIdentifier: default
   tags: {}
   properties:
     ci:
       codebase:
-        connectorRef: "todo_app"
-        build: "<+input>"
+        connectorRef: todo_app
+        build: <+input>
   stages:
-  - stage:
-      name: "test and build"
-      identifier: "test_and_build"
-      description: ""
-      type: "CI"
-      spec:
-        cloneCodebase: true
-        platform:
-          os: "Linux"
-          arch: "Amd64"
-        runtime:
-          type: "Cloud"
-          spec: {}
-        execution:
-          steps:
-          - step:
-              type: "Run"
-              name: "test"
-              identifier: "test"
-              spec:
-                connectorRef: "docker_quickstart"
-                image: "node:16"
-                shell: "Sh"
-                command: "npm install\nnpm test"
-          - step:
-              name: "build and push to docker"
-              identifier: "build_and_push_to_docker"
-              template:
-                templateRef: "docker_push"
-                versionLabel: "v1"
-                templateInputs:
-                  type: "BuildAndPushDockerRegistry"
+    - stage:
+        name: test and build
+        identifier: test_and_build
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: test
+                  identifier: test
                   spec:
-                    connectorRef: "<+input>"
-                    repo: "<+input>"
-  - stage:
-      name: "deployment"
-      identifier: "deployment"
-      description: ""
-      type: "Deployment"
-      spec:
-        deploymentType: "Kubernetes"
-        service:
-          serviceRef: "kubes"
-        environment:
-          environmentRef: "prod"
-          deployToAll: false
-          infrastructureDefinitions:
-          - identifier: "local"
-        execution:
-          steps:
-          - step:
-              name: "Rollout Deployment"
-              identifier: "rolloutDeployment"
-              type: "K8sRollingDeploy"
-              timeout: "10m"
-              spec:
-                skipDryRun: false
-                pruningEnabled: false
-          rollbackSteps:
-          - step:
-              name: "Rollback Rollout Deployment"
-              identifier: "rollbackRolloutDeployment"
-              type: "K8sRollingRollback"
-              timeout: "10m"
-              spec:
-                pruningEnabled: false
-      tags: {}
-      failureStrategies:
-      - onFailure:
-          errors:
-          - "AllErrors"
-          action:
-            type: "StageRollback"
-  identifier: "todo_app_Canary"
-  name: "todo app - Canary"
+                    connectorRef: docker_quickstart
+                    image: node:16
+                    shell: Sh
+                    command: |-
+                      npm install
+                      npm test
+              - step:
+                  name: build and push to docker
+                  identifier: build_and_push_to_docker
+                  template:
+                    templateRef: docker_push
+                    versionLabel: v1
+                    templateInputs:
+                      type: BuildAndPushDockerRegistry
+                      spec:
+                        connectorRef: <+input>
+                        repo: <+input>
+    - stage:
+        name: deployment canary
+        identifier: deployment_canary
+        description: ""
+        type: Deployment
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: kubes
+          environment:
+            environmentRef: prod
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: local
+          execution:
+            steps:
+              - stepGroup:
+                  name: Canary Deployment
+                  identifier: canaryDeployment
+                  steps:
+                    - step:
+                        name: Canary Deployment
+                        identifier: canaryDeployment
+                        type: K8sCanaryDeploy
+                        timeout: 10m
+                        spec:
+                          instanceSelection:
+                            type: Count
+                            spec:
+                              count: 1
+                          skipDryRun: false
+                    - step:
+                        name: Canary Delete
+                        identifier: canaryDelete
+                        type: K8sCanaryDelete
+                        timeout: 10m
+                        spec: {}
+              - stepGroup:
+                  name: Primary Deployment
+                  identifier: primaryDeployment
+                  steps:
+                    - step:
+                        name: Rolling Deployment
+                        identifier: rollingDeployment
+                        type: K8sRollingDeploy
+                        timeout: 10m
+                        spec:
+                          skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: Canary Delete
+                  identifier: rollbackCanaryDelete
+                  type: K8sCanaryDelete
+                  timeout: 10m
+                  spec: {}
+              - step:
+                  name: Rolling Rollback
+                  identifier: rollingRollback
+                  type: K8sRollingRollback
+                  timeout: 10m
+                  spec: {}
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+  identifier: todo_app_Canary
+  name: todo app - Canary
